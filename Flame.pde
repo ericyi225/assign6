@@ -1,78 +1,48 @@
-public class Flame{
-	public int x = 0;
-	public int y = 0;
-	int startTime;
-	int showingImg_num;
-	public Flame (int x, int y) {
-		this.x = x;
-		this.y = y;
-		this.showingImg_num = 0;
-		this.startTime = millis();
+class FlameMgr
+{
+	int currentFrame = 0;
+	int Nowframe = 0;
+	PImage[] flameImg = new PImage[5];
+	int[] x = new int[8];
+	int[] y = new int[8];
+	int print_tag = 0;
+	FlameMgr()
+	{
+		currentFrame = 0;
+		Nowframe = 0;
+		for(int i = 0; i < 5; i++){
+			flameImg[i] = loadImage("img/flame" + (i+1) + ".png");
+		}
+		for(int i = 0; i < 8; i++){
+			x[i] = -1;
+			y[i] = -1;
+			print_tag = 0;
+		}
 	}
 
-	public int getCurrentImg() {
-		if (millis() - this.startTime > 100) {
-			return this.showingImg_num++;
-		}
-		else
+	void draw()
+	{
+		for(int i = 0; i < 8; i++)
 		{
-			return this.showingImg_num;
-		}
+			if(x[i] > 0)
+			{
+				image(flameImg[currentFrame % 5], x[i], y[i]);
+		        if((frameCount - Nowframe) % (60/10) == 5){
+		          currentFrame ++;
+		        }
+		        if((frameCount - Nowframe) % 30 == 0 && (frameCount - Nowframe) != 0)
+		        {
+		          x[i] = -1;
+		          y[i] = -1;
+		          Nowframe = 0;
+		        }
+		    }
+	    }
 	}
-}
-
-public class FlameMgr{
-	ArrayList<Flame> flames = new ArrayList<Flame>(0);
-	PImage flame1;
-	PImage flame2;
-	PImage flame3;
-	PImage flame4;
-	PImage flame5;
-
-	public FlameMgr() {
-		flame1 = loadImage("img/flame1.png");
-		flame2 = loadImage("img/flame2.png");
-		flame3 = loadImage("img/flame3.png");
-		flame4 = loadImage("img/flame4.png");
-		flame5 = loadImage("img/flame5.png");
-	}
-
 	void addFlame(int x, int y)
 	{
-		flames.add(new Flame(x, y));
+		this.x[print_tag] = x;
+		this.y[print_tag] = y;
+		print_tag = (print_tag + 1) % 8;
 	}
-
-	public void draw() {
-		ArrayList<Flame> flamesToRemove = new ArrayList<Flame>(0);
-		for (int i = 0; i < this.flames.size(); ++i) {
-			Flame flame = this.flames.get(i);
-			int num = flame.getCurrentImg();
-			switch (num) {
-				case 0:	
-					image(this.flame1, flame.x, flame.y);
-					break;
-				case 1:	
-					image(this.flame2, flame.x, flame.y);
-					break;
-				case 2:	
-					image(this.flame3, flame.x, flame.y);
-					break;
-				case 3:	
-					image(this.flame4, flame.x, flame.y);
-					break;
-				case 4:	
-					image(this.flame5, flame.x, flame.y);
-					break;
-				case 5:
-					flamesToRemove.add(flame);
-					break;	
-
-			}
-		}
-
-		for (int i = 0; i < flamesToRemove.size(); ++i) {
-			flames.remove(flamesToRemove.get(i));
-		}
-	}
-
 }
