@@ -24,116 +24,191 @@ class FlightType
 	static final int ENEMY = 1;
 	static final int ENEMYSTRONG = 2;
 }
-
 int state = GameState.START;
 int currentType = EnemysShowingType.STRAIGHT;
 int enemyCount = 8;
+int bulletCount = 5;
+int bullet_tag = 0;
 Enemy[] enemys = new Enemy[enemyCount];
+Boss[] boss = new Boss[enemyCount];
 Fighter fighter;
-Background bg;
+BackGround bg;
 FlameMgr flameMgr;
 Treasure treasure;
 HPDisplay hpDisplay;
+Bullet[] bullets = new Bullet[bulletCount];
 
-boolean isMovingUp;
-boolean isMovingDown;
-boolean isMovingLeft;
-boolean isMovingRight;
+boolean upPressed = false;
+boolean downPressed = false;
+boolean leftPressed = false;
+boolean rightPressed = false;
 
 int time;
-int wait = 4000;
+int wait = 6000;
 
 
+int speed=5;
+int score=0;
 
 void setup () {
-	size(640, 480);
+	size(640, 480) ;
 	flameMgr = new FlameMgr();
-	bg = new Background();
+	bg = new BackGround();
 	treasure = new Treasure();
 	hpDisplay = new HPDisplay();
 	fighter = new Fighter(20);
+	frameRate(60);
 }
 
-void draw()
-{
-	if (state == GameState.START) {
-		bg.draw();	
-	}
-	else if (state == GameState.PLAYING) {
-		bg.draw();
-		treasure.draw();
-		flameMgr.draw();
-		fighter.draw();
-
-		//enemys
-		if(millis() - time >= wait){
-			addEnemy(currentType++);
-			currentType = currentType%4;
-		}		
-
-		for (int i = 0; i < enemyCount; ++i) {
-			if (enemys[i]!= null) {
-				enemys[i].move();
-				enemys[i].draw();
-				if (enemys[i].isCollideWithFighter()) {
-					fighter.hpValueChange(-20);
-					flameMgr.addFlame(enemys[i].x, enemys[i].y);
-					enemys[i]=null;
-				}
-				else if (enemys[i].isOutOfBorder()) {
-					enemys[i]=null;
+void draw(){
+	switch(state){
+		case GameState.START:
+			bg.draw();
+			break;
+		case GameState.PLAYING:
+			bg.draw();
+			treasure.draw();
+			flameMgr.draw();
+			fighter.draw();
+			//enemys
+			if(millis() - time >= wait){
+				addEnemy(currentType++);
+				currentType = currentType % 4;
+				time = millis();
+			}
+			if(currentType == 0)
+			{
+				for(int i = 0; i < enemyCount; ++i)
+				{
+					if(boss[i] != null)
+					{
+						boss[i].move();
+						boss[i].draw();
+						if(boss[i].isCollideWithFighter())
+						{
+							fighter.hpValueChange(-50);
+							flameMgr.addFlame(boss[i].x, boss[i].y);
+							boss[i] = null;
+						}
+						else if (boss[i].isOutOfBorder())
+						{
+							boss[i] = null;
+						}
+					}
 				}
 			}
-		}
-		// 這地方應該加入Fighter 血量顯示UI
-		
+			else 
+			{	
+				for(int i = 0; i < enemyCount; ++i)
+				{
+					if(enemys[i] != null)
+					{
+						enemys[i].move();
+						enemys[i].draw();
+						if(enemys[i].isCollideWithFighter())
+						{
+							fighter.hpValueChange(-20);
+							flameMgr.addFlame(enemys[i].x, enemys[i].y);
+							enemys[i] = null;
+						}
+						else if (enemys[i].isOutOfBorder())
+						{
+							enemys[i] = null;
+						}
+					}
+				}
+			}
+			//bullet judge
+			for(int i = 0; i < bulletCount; ++i)
+			{
+				if(bullets[i] != null)
+				{
+					bullets[i].move();
+					bullets[i].draw();
+					if(bullets[i].isCollideWithEnemy())
+					{
+						score += 10;
+						bullets[i] = null;
+					}
+					else if (bullets[i].isOutOfBorder())
+					{
+						bullets[i] = null;
+					}
+				}
+			}
+			//hp
+			hpDisplay.updateWithFighterHP(fighter.hp);
+			if(fighter.hp <= 0) state = GameState.END;
+			//score
+			fill(255);
+			textSize(32);
+			text("score:"+score, 20, 450); 
+			break;
+		case GameState.END:
+			bg.draw();
+			reset();
+			break;
 	}
-	else if (state == GameState.END) {
-		bg.draw();
-	}
-}
-boolean isHit(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh)
-{
-	// Collision x-axis?
-    boolean collisionX = (ax + aw >= bx) && (bx + bw >= ax);
-    // Collision y-axis?
-    boolean collisionY = (ay + ah >= by) && (by + bh >= ay);
-    return collisionX && collisionY;
 }
 
+void reset(){
+	fighter = new Fighter(20);
+	score=0;
+	currentType = EnemysShowingType.STRAIGHT;
+	for(int i = 0; i < enemyCount; i++)
+	{
+		enemys[i] = null;
+		boss[i] = null;
+	}
+}
+//*******************************************************************************
 void keyPressed(){
-  switch(keyCode){
-    case UP : isMovingUp = true ;break ;
-    case DOWN : isMovingDown = true ; break ;
-    case LEFT : isMovingLeft = true ; break ;
-    case RIGHT : isMovingRight = true ; break ;
-    default :break ;
-  }
+	if(key == CODED){
+		switch(keyCode){
+			case UP:
+				upPressed = true;
+				break;
+			case DOWN:
+				downPressed = true;
+				break;
+			case LEFT:
+				leftPressed = true;
+				break;
+			case RIGHT:
+				rightPressed = true;
+				break;
+		}
+	}
+	if(key==' ')
+	{
+		fighter.shoot();
+	} 
 }
 void keyReleased(){
-  switch(keyCode){
-	case UP : isMovingUp = false ;break ;
-    case DOWN : isMovingDown = false ; break ;
-    case LEFT : isMovingLeft = false ; break ;
-    case RIGHT : isMovingRight = false ; break ;
-    default :break ;
-  }
-  if (key == ' ') {
-  	if (state == GameState.PLAYING) {
-		fighter.shoot();
+	if(key == CODED){
+		switch(keyCode){
+			case UP:
+				upPressed = false;
+				break;
+			case DOWN:
+				downPressed = false;
+				break;
+			case LEFT:
+				leftPressed = false;
+				break;
+			case RIGHT:
+				rightPressed = false;
+				break;
+		}
 	}
-  }
-  if (key == ENTER) {
-    switch(state) {
-      case GameState.START:
-      case GameState.END:
-        state = GameState.PLAYING;
-		enemys = new Enemy[enemyCount];
-		flameMgr = new FlameMgr();
-		treasure = new Treasure();
-		fighter = new Fighter(20);
-      default : break ;
-    }
-  }
+}
+void scoreChange(int value){
+	score = score + value;
 }
 
+boolean isHit(float ax,float ay,float aw,float ah,float bx,float by,float bw,float bh){
+	if (ax >= bx - aw && ax <= bx + bw && ay >= by - ah && ay <= by + bh){
+		return true;
+	}
+	return false;	
+}
