@@ -156,6 +156,13 @@ void reset(){
 	score=0;
 	currentType = EnemysShowingType.STRAIGHT;
  flameMgr = new FlameMgr(); 
+ for(int i = 0; i < bulletCount; i++)
+  {
+    bullets[i] = null;
+  }for(int i = 0; i < bulletCount; i++)
+  {
+    bullets[i] = null;
+  }
 	for(int i = 0; i < enemyCount; i++)
 	{
 		enemys[i] = null;
