@@ -155,6 +155,7 @@ void reset(){
 	fighter = new Fighter(20);
 	score=0;
 	currentType = EnemysShowingType.STRAIGHT;
+ flameMgr = new FlameMgr(); 
 	for(int i = 0; i < enemyCount; i++)
 	{
 		enemys[i] = null;
